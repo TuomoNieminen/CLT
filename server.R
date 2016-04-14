@@ -140,7 +140,7 @@ shinyServer(function(input, output, session) {
                         "continuous" = s$cont_seq,
                         "discrete" = floor(s$xlim[1]):ceiling(s$xlim[2]),
                         "mine" = 1:10)
-      s$selected <- data.frame(d = s$df[,input$view],type="sample")
+      s$selected <- data.frame(sample = input$view, values = s$df[,input$view])
       s$density <- data.frame(d = do.call(paste0("d",distr()), 
                                           c(list(x=s$x_seq),args()[-1])),
                               x=s$x_seq,
@@ -173,7 +173,7 @@ shinyServer(function(input, output, session) {
   
   sdens <- reactive({
     if(s$readytoPlot) {
-      density(s$selected$d, kernel="gaussian", 
+      density(s$selected$values, kernel="gaussian", 
               from = s$xlim[1], to = s$xlim[2], 
               n=2^6)
     }
@@ -200,9 +200,13 @@ shinyServer(function(input, output, session) {
       lwd <- ifelse(input$cat=="continuous", 1, 3)
       lines(s$x_seq, s$density$d, type=type, lwd=lwd, col="darkgreen")
       
+      # add points corresponding to the sample values
+      zeros = rep(0, input$n)
+      points(x=s$selected$values, y=zeros, pch="|",col="red")
+      
       # add legend
-      legend("topright",legend=c("sample estimate","actual density"),
-             col=c("cornflowerblue","darkgreen"),lwd=1)
+      legend("topright",legend=c("sampled values","distribution estimate","actual distribution"),
+             col=c("red","cornflowerblue","darkgreen"),lwd=1)
     }
   })
   
@@ -232,13 +236,16 @@ shinyServer(function(input, output, session) {
       polygon(mdens(), col="grey92",border="cornflowerblue")
       
       # add lines describing the theoretical distr (normal)
-      
       y_fit <- dnorm(s$cont_seq, mean(s$stats),s$sd_stats)
       lines(s$cont_seq, y_fit,col="darkgreen", lwd=1)
       
+      zeros <- rep(0, input$iter)
+      # add points corresponding to the sample statistics
+      points(x= s$stats, y=zeros,pch = "|",col = "red")
+      
       # add legend
-      legend("topright",legend=c("sample estimate","normal\napproximation"),
-             col=c("cornflowerblue","darkgreen"),lwd=1)
+      legend("topright",legend=c(paste(input$stat),"distribution estimate","normal\napproximation"),
+             col=c("red","cornflowerblue","darkgreen"),lwd=1)
     }
   })
   
@@ -257,9 +264,7 @@ shinyServer(function(input, output, session) {
   output$head_sample <- renderTable({
     if(s$readytoPlot) {
       n <- min(input$n, 6)
-      X <- data.frame(sample=input$view,
-                      values = s$df[,input$view])
-      head(X,n=n)
+      head(s$selected,n=n)
     }
   })
   output$head_stats <- renderTable({
