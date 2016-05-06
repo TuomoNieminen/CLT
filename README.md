@@ -1,4 +1,4 @@
-# CLT
+# CLTdemo
 Central limit theorem demo (R shiny)
 
 Shiny is an R library for creating interactive web applications. This  app demonstrates the Central Limit Theorem and sampling distributions 
@@ -11,5 +11,5 @@ if(!require(shiny)) {
   install.packages("shiny")
   library(shiny)
 }
-runGitHub("CLT", "TuomoNieminen")
+runGitHub("CLTdemo", "TuomoNieminen")
 ```
